@@ -1,0 +1,20 @@
+services:
+  tracker:
+    build: .
+    container_name: alcodry
+    restart: unless-stopped
+    environment:
+      TZ: Europe/Moscow
+    ports:
+      # Наружу не публикуется, только локальная сеть.
+      - "7777:8000"
+    volumes:
+      # Один файл SQLite рядом с compose — попадает в бэкап хоста.
+      - ./data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

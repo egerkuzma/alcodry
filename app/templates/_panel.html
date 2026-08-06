@@ -1,0 +1,53 @@
+{#
+  Главный экран целиком. HTMX меняет этот блок на месте, поэтому hx-target и
+  hx-swap заданы один раз здесь — кнопки внутри их наследуют.
+  Раз в минуту блок перечитывает себя сам: вкладка висит открытой сутками,
+  и полночь, и конец окна должны доезжать без перезагрузки.
+#}
+<div id="panel" class="panel"
+     hx-get="/ui/panel" hx-trigger="every 60s"
+     hx-target="#panel" hx-swap="outerHTML">
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  {% if state.mode == "stage" %}
+    {% set passed = state.days_passed(today) %}
+    {% set total = state.stage_weeks * 7 %}
+    {% set can_close = state.can_close(today) %}
+
+    {# Нумерация с единицы: день старта — первый, а не нулевой. Как только
+       номер упёрся бы в total+1, срок уже вышел и на его месте другая строка. #}
+    <p class="big">{% if can_close %}Срок вышел{% else %}День {{ passed + 1 }} из {{ total }}{% endif %}</p>
+
+    <div class="bar"><span style="width: {{ [100, passed * 100 // total]|min }}%"></span></div>
+
+    <p class="line">Этап {{ state.stage_index + 1 }} из {{ state.stages_in_cycle }}, цикл №{{ state.cycle_no }}</p>
+
+    {% if state.penalty_weeks %}
+      <p class="line penalty">+{{ state.penalty_weeks|weeks }} за {{ state.penalty_weeks|plural("срыв", "срыва", "срывов") }}{% if state.stage_weeks == max_weeks %}, потолок {{ max_weeks|weeks }}{% endif %}</p>
+    {% endif %}
+
+    <p class="line">Этап до {{ state.end_date|ru_date }}{% if can_close %}, сегодня день {{ passed + 1 }}{% endif %}</p>
+
+    <div class="actions">
+      <button type="button" class="danger" hx-post="/ui/relapse"
+              hx-confirm="Отметить срыв? Этап начнётся заново.">Сорвался</button>
+      <button type="button" class="primary" hx-post="/ui/stage-done"
+              {% if not can_close %}disabled{% endif %}>Этап закрыт</button>
+    </div>
+
+  {% else %}
+    {% set left = state.window_days_left(today) %}
+
+    <p class="big">Окно, осталось {{ left|days }}</p>
+
+    <p class="line">Следующий этап — {{ state.stage_weeks|weeks }}</p>
+    <p class="line">Этап {{ state.stage_index + 1 }} из {{ state.stages_in_cycle }}, цикл №{{ state.cycle_no }}</p>
+    <p class="line">Окно по {{ state.window_ends_on|ru_date }} включительно</p>
+
+    <div class="actions">
+      <button type="button" hx-post="/ui/window-drink">Выпил</button>
+      <button type="button" class="primary" hx-post="/ui/window-end">Начать этап сейчас</button>
+    </div>
+  {% endif %}
+</div>

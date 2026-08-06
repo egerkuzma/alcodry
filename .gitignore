@@ -1,0 +1,10 @@
+# Спецификация остаётся локальной, в репозиторий не едет.
+SPEC.md
+
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+data/*.db
+data/*.db-wal
+data/*.db-shm

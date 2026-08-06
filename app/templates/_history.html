@@ -1,0 +1,70 @@
+{#
+  Экран истории целиком: сводка, журнал по дням от новых к старым и отмена.
+  HTMX меняет этот блок на месте — как и главный экран.
+#}
+<div id="history" class="history"
+     hx-target="#history" hx-swap="outerHTML">
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+  {% if undone %}<p class="note">Отменено: {{ undone }}</p>{% endif %}
+
+  <div class="stats">
+    <div class="stat">
+      <b>{{ stats.sober_days }}</b>
+      <span>{{ stats.sober_days|plural("трезвый день", "трезвых дня", "трезвых дней") }}</span>
+    </div>
+    <div class="stat">
+      <b>{{ stats.longest_streak }}</b>
+      <span>самый длинный отрезок, {{ stats.longest_streak|plural("день", "дня", "дней") }}</span>
+    </div>
+    <div class="stat">
+      <b>{{ stats.cycles_done }}</b>
+      <span>{{ stats.cycles_done|plural("цикл пройден", "цикла пройдено", "циклов пройдено") }}</span>
+    </div>
+    <div class="stat">
+      <b>{{ stats.relapses }}</b>
+      <span>{{ stats.relapses|plural("срыв", "срыва", "срывов") }}</span>
+    </div>
+    <div class="stat">
+      <b>{{ stats.window_days }}</b>
+      <span>{{ stats.window_days|plural("день в окне", "дня в окнах", "дней в окнах") }}</span>
+    </div>
+    <div class="stat">
+      <b>{{ stats.windows_dry }}<i>/{{ stats.windows_closed }}</i></b>
+      <span>окон без выпивки</span>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button type="button" class="danger" hx-post="/ui/undo"
+            {% if undoable %}
+            hx-confirm="Отменить {{ undo_label }} {{ undoable.local_date|ru_date }}?"
+            {% else %}disabled{% endif %}>
+      {% if undoable %}
+        Отменить {{ undo_label }} {{ undoable.local_date|ru_date }}
+      {% else %}
+        Отменять нечего
+      {% endif %}
+    </button>
+  </div>
+
+  <ol class="journal">
+    {% for day, day_events in days %}
+      <li class="day">
+        <h2>{{ day|ru_date }}{% if day.year != today.year %} {{ day.year }}{% endif %}</h2>
+        {% for event in day_events %}
+          <p class="event {{ event.kind }}">
+            {# «сам» — пометка автовыхода из окна; у самого первого события
+               журнала она не значит ничего, там это просто начало отсчёта. #}
+            <span class="what">
+              {%- if event.id == first_id %}Начало отсчёта
+              {%- else %}{{ labels[event.kind] }}{% if event.auto %} <i>сам</i>{% endif %}
+              {%- endif %}
+            </span>
+            <span class="where">этап {{ event.stage_index + 1 }}, цикл №{{ event.cycle_no }}{% if event.note %} · {{ event.note }}{% endif %}</span>
+          </p>
+        {% endfor %}
+      </li>
+    {% endfor %}
+  </ol>
+</div>
