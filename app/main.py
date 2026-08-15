@@ -11,7 +11,7 @@ from datetime import date
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -105,6 +105,12 @@ def ui_action(request: Request, conn, action):
     except logic.TransitionError as exc:
         error = str(exc)
     return render(request, "_panel.html", conn, day, error)
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    """Браузеры и закладочники просят иконку из корня, минуя разметку."""
+    return FileResponse(BASE_DIR / "static" / "favicon.ico")
 
 
 @app.get("/")

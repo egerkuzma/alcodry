@@ -1,0 +1,9 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="alcodry">
+  <!-- Лестница этапов: три ступени вверх. Те же цвета, что и в интерфейсе. -->
+  <rect width="64" height="64" rx="14" fill="#14181b"/>
+  <g fill="#4c9f70">
+    <rect x="8"  y="36" width="12" height="16" rx="6" opacity=".5"/>
+    <rect x="26" y="24" width="12" height="28" rx="6" opacity=".75"/>
+    <rect x="44" y="12" width="12" height="40" rx="6"/>
+  </g>
+</svg>
