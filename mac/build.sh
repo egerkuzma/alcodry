@@ -9,7 +9,8 @@ rm -rf build
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 swiftc -O -swift-version 5 -target arm64-apple-macos13 \
-       -o "$APP/Contents/MacOS/alcodry" Sources/main.swift -framework Cocoa
+       -o "$APP/Contents/MacOS/alcodry" Sources/main.swift \
+       -framework Cocoa -framework ServiceManagement
 
 cp Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"

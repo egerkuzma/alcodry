@@ -3,6 +3,7 @@
 // что видно в меню, приехало последним ответом сервера.
 
 import Cocoa
+import ServiceManagement
 
 let defaultServer = "http://kuzmich-serv:7777"
 let refreshSeconds = 60.0
@@ -124,8 +125,21 @@ final class Controller: NSObject, NSMenuDelegate {
     private var snap = Snapshot(title: "…", lines: ["Нет связи с сервером"], mode: "offline")
     private var timer: Timer?
 
+    /// Куда система кладёт иконку при первом запуске. Без этого она выбирает
+    /// место сама и на ноутбуках с вырезом попадает ровно под вырез — иконка
+    /// есть, а увидеть её нельзя. Ноль означает крайнее правое место.
+    private static func placeOnFirstLaunch() {
+        let key = "NSStatusItem Preferred Position alcodry"
+        if UserDefaults.standard.object(forKey: key) == nil {
+            UserDefaults.standard.set(0, forKey: key)
+        }
+    }
+
     override init() {
+        Controller.placeOnFirstLaunch()
         super.init()
+        item.autosaveName = "alcodry"
+        item.isVisible = true
         item.button?.image = ladderIcon()
         item.button?.imagePosition = .imageLeading
         menu.delegate = self
@@ -206,6 +220,13 @@ final class Controller: NSObject, NSMenuDelegate {
         add("Открыть в браузере", #selector(openBrowser))
         add("Обновить", #selector(reload))
         add("Адрес сервера…", #selector(setServer))
+
+        let login = NSMenuItem(title: "Запускать при входе",
+                               action: #selector(toggleLogin), keyEquivalent: "")
+        login.target = self
+        login.state = SMAppService.mainApp.status == .enabled ? .on : .off
+        menu.addItem(login)
+
         menu.addItem(.separator())
         add("Выйти", #selector(quit))
     }
@@ -263,6 +284,21 @@ final class Controller: NSObject, NSMenuDelegate {
         client.base = value
         UserDefaults.standard.set(value, forKey: "server")
         refresh()
+    }
+
+    /// Автозапуск через SMAppService: система сама поднимет приложение при входе
+    /// в учётную запись. Регистрируется тот бандл, из которого запущено, поэтому
+    /// приложение должно лежать там, где и останется — в «Программах».
+    @objc private func toggleLogin() {
+        do {
+            if SMAppService.mainApp.status == .enabled {
+                try SMAppService.mainApp.unregister()
+            } else {
+                try SMAppService.mainApp.register()
+            }
+        } catch {
+            report("Не вышло переключить автозапуск: \(error.localizedDescription)")
+        }
     }
 
     @objc private func quit() { NSApp.terminate(nil) }
