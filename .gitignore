@@ -8,3 +8,6 @@ __pycache__/
 data/*.db
 data/*.db-wal
 data/*.db-shm
+
+# Сборка маковского клиента: .app и .dmg собираются из исходников.
+mac/build/
